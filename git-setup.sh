@@ -38,8 +38,11 @@ EOF
     # NEW: Add includeIf rule to main config at ~/.config/git/config
     cat >> "$GIT_CONFIG_GLOBAL" << EOF
 [includeIf "gitdir:$directory_path/"]
-    path = $config_file
+    path = "~/.config/git/config-$config_name"
 EOF
+
+    # Expand ~ in directory path
+    directory_path="${directory_path/#\~/$HOME}"
 
     # Create directory
     mkdir -p "$directory_path"
@@ -81,42 +84,23 @@ clone_repository() {
 
 # Function to copy configuration files
 copy_configuration_files() {
-    # NEW: ensure git config dir exists
     mkdir -p "$GIT_CONFIG_DIR"
 
-    echo "source $REPO_PATH/.gitconfig"
-    echo
-    cat "$REPO_PATH/.gitconfig"
-    echo
-
-    # NEW: switch from ~/.gitconfig to ~/.config/git/config
     if [[ -f "$GIT_CONFIG_GLOBAL" ]]; then
         echo "Existing Git config found at $GIT_CONFIG_GLOBAL"
-        echo
-        cat "$GIT_CONFIG_GLOBAL"
         echo
     else
         echo "No existing Git config found, copying default configuration..."
         cp "$REPO_PATH/.gitconfig" "$GIT_CONFIG_GLOBAL"
         echo
-        cat "$GIT_CONFIG_GLOBAL"
-        echo
     fi
 
-    echo "source $REPO_PATH/.gitconfig"
-    echo
-    cat "$REPO_PATH/config"
-    echo
     if [[ -f "$HOME/.ssh/config" ]]; then
         echo "Existing SSH config found at $HOME/.ssh/config"
-        echo
-        cat "$HOME/.ssh/config"
         echo
     else
         echo "No existing SSH config found, copying default configuration..."
         cp "$REPO_PATH/config" "$HOME/.ssh/config"
-        echo
-        cat "$HOME/.ssh/config"
         echo
     fi
 }
