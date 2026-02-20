@@ -5,6 +5,10 @@ REPO_URL="git@github.com:serosme/git-setup.git"
 REPO_PATH="$HOME/workspace/personal/git-setup"
 SSH_KEY_PATH="$HOME/.ssh/id_ed25519"
 
+# NEW: put all git configs under ~/.config/git/
+GIT_CONFIG_DIR="$HOME/.config/git"
+GIT_CONFIG_GLOBAL="$GIT_CONFIG_DIR/config"
+
 # Function to add a Git configuration
 add_git_config() {
     echo "Adding new Git configuration:"
@@ -20,21 +24,21 @@ add_git_config() {
         return 1
     fi
 
-    # Expand ~ in directory path
-    directory_path="${directory_path/#\~/$HOME}"
+    # NEW: ensure git config dir exists
+    mkdir -p "$GIT_CONFIG_DIR"
 
-    # Create configuration file in repository
-    config_file="$REPO_PATH/.gitconfig-$config_name"
+    # NEW: Create configuration file in ~/.config/git/
+    config_file="$GIT_CONFIG_DIR/config-$config_name"
     cat > "$config_file" << EOF
 [user]
     name = $user_name
     email = $user_email
 EOF
 
-    # Add includeIf rule to main .gitconfig in home directory
-    cat >> "$HOME/.gitconfig" << EOF
+    # NEW: Add includeIf rule to main config at ~/.config/git/config
+    cat >> "$GIT_CONFIG_GLOBAL" << EOF
 [includeIf "gitdir:$directory_path/"]
-    path = $REPO_PATH/.gitconfig-$config_name
+    path = $config_file
 EOF
 
     # Create directory
@@ -77,21 +81,25 @@ clone_repository() {
 
 # Function to copy configuration files
 copy_configuration_files() {
+    # NEW: ensure git config dir exists
+    mkdir -p "$GIT_CONFIG_DIR"
+
     echo "source $REPO_PATH/.gitconfig"
     echo
     cat "$REPO_PATH/.gitconfig"
     echo
 
-    if [[ -f "$HOME/.gitconfig" ]]; then
-        echo "Existing .gitconfig found at $HOME/.gitconfig"
+    # NEW: switch from ~/.gitconfig to ~/.config/git/config
+    if [[ -f "$GIT_CONFIG_GLOBAL" ]]; then
+        echo "Existing Git config found at $GIT_CONFIG_GLOBAL"
         echo
-        cat "$HOME/.gitconfig"
+        cat "$GIT_CONFIG_GLOBAL"
         echo
     else
-        echo "No existing .gitconfig found, copying default configuration..."
-        cp "$REPO_PATH/.gitconfig" "$HOME/.gitconfig"
+        echo "No existing Git config found, copying default configuration..."
+        cp "$REPO_PATH/.gitconfig" "$GIT_CONFIG_GLOBAL"
         echo
-        cat "$HOME/.gitconfig"
+        cat "$GIT_CONFIG_GLOBAL"
         echo
     fi
 
